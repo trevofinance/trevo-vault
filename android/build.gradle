@@ -17,8 +17,8 @@ android {
 		applicationId "finance.trevo.vault"
 		minSdk 23
 		targetSdk 35
-		versionCode 14
-		versionName "1.0.10"
+		versionCode 15
+		versionName "1.0.11"
 		ndk {
 			// MUST stay in sync with the cargo { targets } block below. 32-bit x86 was
 			// listed here but is not a cargo target, so x86 splits shipped without
