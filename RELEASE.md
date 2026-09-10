@@ -74,6 +74,15 @@ Distribution.p12           Apple Distribution certificate
 Development.p12
 ```
 
+The current Sr25519 metadata-verifier keypair is stored separately at
+`~/dev/secure/trevo-vault-metadata-verifier-staging/metadata_verifier.txt`. Keep this file at mode
+`0600`, offline when it is not being used, and backed up independently. Its public key is the
+`DEFAULT_VERIFIER_PUBLIC` value compiled into the app; its secret phrase must never enter git.
+
+> Rotating `DEFAULT_VERIFIER_PUBLIC` changes the app's trust root. Existing initialized Vaults do
+> not accept updates signed by a different verifier; users migrating from an older verifier must
+> wipe/reset the Vault or remove the old general certificate and explicitly establish the new one.
+
 > ⚠️ **Not in version control — back it up** (a password manager is fine). Losing any of it blocks
 > releases for days. Apple will not re-issue a `.p8`; a lost upload key needs a Play Console
 > upload-key reset (a couple of business days, existing users unaffected).
@@ -236,7 +245,7 @@ Requires `subkey` on PATH and a `trevo_assets/.env` (see `trevo_assets/env.examp
 - `SIGNER_URI` — the **secret seed** of the metadata verifier key. Not in the repo. This is the most
   important secret in the project: it is the key the installed apps trust for metadata updates. Make
   sure it is backed up.
-- `VERIFIER_HEX` — `0x2405ad269ad0e6ca50f74226f193d7bfd1b51ef4064493c48a99f82a5a9b5374`
+- `VERIFIER_HEX` — `0x7e177b85cefefb6e46b1fc007726ee428fe443906e94f77e4a3ae622dc135642`
   (must match `DEFAULT_VERIFIER_PUBLIC` in `rust/defaults/src/lib.rs`)
 
 ```bash
@@ -247,6 +256,10 @@ cd trevo_assets && ./generate_qr.sh && cd ..
 ```
 
 Commit the new metadata hex **and** the new QR PNG together.
+
+If `subkey` is not on PATH, set `SUBKEY_BIN` to its executable before running the script. On the
+current release machine it is
+`/Users/victor/dev/trevo/polkadot-sdk-fork/target/release/subkey`.
 
 ---
 
@@ -606,8 +619,8 @@ locally with the fastlane lanes above. Wiring CI for Trevo is a worthwhile follo
 | Chain RPC | `wss://rpc.api.trevo.finance` |
 | Genesis hash | `6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31` |
 | Chain params | base58 prefix `5335` · decimals `12` · unit `TREVO` · Sr25519 |
-| Metadata verifier pubkey | `0x2405ad269ad0e6ca50f74226f193d7bfd1b51ef4064493c48a99f82a5a9b5374` |
-| Current metadata / QR | `rust/defaults/release_metadata/trevo-asset-hub1011` · regenerate `trevo_assets/load_metadata_trevo-asset-hubV1011.png` with the metadata verifier |
+| Metadata verifier pubkey | `0x7e177b85cefefb6e46b1fc007726ee428fe443906e94f77e4a3ae622dc135642` |
+| Current metadata / QR | `rust/defaults/release_metadata/trevo-asset-hub1011` · `trevo_assets/load_metadata_trevo-asset-hubV1011.png` |
 | Gradle / AGP / Kotlin | 8.14.3 / 8.13.1 / 1.9.22 |
 | SDK / NDK | compileSdk 36 · targetSdk 35 · minSdk 23 · NDK 28.2.13676358 |
 | Java | Zulu JDK 17 |

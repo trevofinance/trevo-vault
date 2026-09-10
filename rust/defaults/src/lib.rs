@@ -82,7 +82,7 @@ use definitions::network_specs::{Verifier, VerifierValue};
 mod error;
 pub use error::{Error, Result};
 
-/// Real Parity public key, with `Sr25519` encryption
+/// Trevo metadata verifier public key, with `Sr25519` encryption
 ///
 /// To be used in [`VerifierValue`] for general verifier in default cold
 /// database
@@ -90,9 +90,12 @@ pub use error::{Error, Result};
 //     0xc4, 0x6a, 0x22, 0xb9, 0xda, 0x19, 0x54, 0x0a, 0x77, 0xcb, 0xde, 0x23, 0x19, 0x7e, 0x5f, 0xd9,
 //     0x04, 0x85, 0xc7, 0x2b, 0x4e, 0xcf, 0x3c, 0x59, 0x9e, 0xcc, 0xa6, 0x99, 0x8f, 0x39, 0xbd, 0x57,
 // ];
-pub const DEFAULT_VERIFIER_PUBLIC: [u8; 32] = [36 as u8, 5 as u8, 173 as u8, 38 as u8, 154 as u8, 208 as u8, 230 as u8, 202 as u8, 80 as u8, 247 as u8, 66 as u8, 38 as u8, 241 as u8, 147 as u8, 215 as u8, 191 as u8, 209 as u8, 181 as u8, 30 as u8, 244 as u8, 6 as u8, 68 as u8, 147 as u8, 196 as u8, 138 as u8, 153 as u8, 248 as u8, 42 as u8, 90 as u8, 155 as u8, 83 as u8, 116 as u8];
+pub const DEFAULT_VERIFIER_PUBLIC: [u8; 32] = [
+    0x7e, 0x17, 0x7b, 0x85, 0xce, 0xfe, 0xfb, 0x6e, 0x46, 0xb1, 0xfc, 0x00, 0x77, 0x26, 0xee, 0x42,
+    0x8f, 0xe4, 0x43, 0x90, 0x6e, 0x94, 0xf7, 0x7e, 0x4a, 0x3a, 0xe6, 0x22, 0xdc, 0x13, 0x56, 0x42,
+];
 
-/// Generate default general verifier [`Verifier`], with Parity public key
+/// Generate default general verifier [`Verifier`], with Trevo public key
 /// inside.
 pub fn default_general_verifier() -> Verifier {
     Verifier {

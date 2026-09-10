@@ -5,7 +5,7 @@
 ---
 
 ## Текущее состояние
-- `rust/defaults/src/lib.rs`: genesis hash сейчас `6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31`; verifier public key 0x2405ad269ad0e6ca50f74226f193d7bfd1b51ef4064493c48a99f82a5a9b5374.
+- `rust/defaults/src/lib.rs`: genesis hash сейчас `6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31`; verifier public key 0x7e177b85cefefb6e46b1fc007726ee428fe443906e94f77e4a3ae622dc135642.
 - `rust/defaults/release_metadata/`: одна версия `trevo-asset-hub1011` (держим только свежую).
 - `android/src/main/assets/Database/`: пересобрана под 1011 (через `./generate_database.sh`).
 

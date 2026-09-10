@@ -41,7 +41,7 @@ cp env.example .env
 SIGNER_URI="your_actual_signer_uri_here"
 
 # Verifier hex for QR code generation  
-VERIFIER_HEX="0x2405ad269ad0e6ca50f74226f193d7bfd1b51ef4064493c48a99f82a5a9b5374"
+VERIFIER_HEX="0x7e177b85cefefb6e46b1fc007726ee428fe443906e94f77e4a3ae622dc135642"
 ```
 
 ⚠️ **Важно**: Файл `.env` не коммитится в git по соображениям безопасности.
@@ -65,4 +65,3 @@ QR код будет создан в папке `trevo_assets`.
 - **Для разработчиков**: `update_metadata.md` - полная техническая документация
 - **Для быстрого старта**: `QUICK_START.md` - краткие инструкции
 - **Для troubleshooting**: См. раздел "Troubleshooting" в `update_metadata.md`
-

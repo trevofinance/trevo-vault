@@ -16,7 +16,7 @@ generate_chain_qr() {
     cp "../files/in_progress/sign_me_load_metadata_${CHAIN_NAME}V${RUNTIME_VERSION}" .
 
     # sign specs
-    SIGNATURE=$(cat sign_me_load_metadata_${CHAIN_NAME}V${RUNTIME_VERSION} | subkey sign --suri "$SIGNER_URI")
+    SIGNATURE=$(cat sign_me_load_metadata_${CHAIN_NAME}V${RUNTIME_VERSION} | "$SUBKEY_BIN" sign --suri "$SIGNER_URI")
     
     # generate qr
     cargo run --release make --goal qr --crypto sr25519 --msg load-metadata --payload sign_me_load_metadata_${CHAIN_NAME}V${RUNTIME_VERSION} --verifier-hex $VERIFIER_HEX --signature-hex $SIGNATURE
@@ -27,6 +27,8 @@ generate_chain_qr() {
 }
 
 # Load environment variables
+SUBKEY_BIN="${SUBKEY_BIN:-subkey}"
+
 if [ -f ".env" ]; then
     source .env
 elif [ -f "env.local" ]; then
