@@ -31,7 +31,7 @@ Usage: fastlane prepare_database
 [bundle exec] fastlane android verify_aab
 ```
 
-Verify the built AAB: signature, ABI coverage, native lib, embedded database
+Verify the built AAB: signature, ABI coverage, 16 KB alignment, native lib, embedded database
 
 Usage: fastlane verify_aab
 
