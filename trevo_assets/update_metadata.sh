@@ -58,7 +58,7 @@ log_info "📥 Загружаем новые метаданные с RPC узл�
 cd rust/generate_message
 
 # Загружаем метаданные
-if ! cargo run load-metadata -d -u "$RPC_URL"; then
+if ! cargo run --locked load-metadata -d -u "$RPC_URL"; then
     log_error "Не удалось загрузить метаданные с RPC узла"
     log_error "Проверьте подключение к интернету и доступность RPC узла"
     exit 1
@@ -68,7 +68,8 @@ fi
 cd ../..
 
 # Ищем новый файл метаданных
-METADATA_FILE=$(ls rust/files/in_progress/sign_me_load_metadata_${NETWORK_NAME}V* 2>/dev/null | head -1)
+METADATA_FILE=$(find rust/files/in_progress -maxdepth 1 -type f \
+    -name "sign_me_load_metadata_${NETWORK_NAME}V*" | sort -V | tail -1)
 
 if [ -z "$METADATA_FILE" ]; then
     log_error "Не найден файл с метаданными для сети $NETWORK_NAME"
@@ -86,8 +87,8 @@ log_info "🔧 Подготавливаем файл метаданных..."
 # Конвертируем в hex формат
 xxd -p "$METADATA_FILE" | tr -d '\n' > temp_metadata
 
-# Удаляем заголовок и добавляем префикс 0x
-sed 's/^920d1900/0x/' temp_metadata > "rust/defaults/release_metadata/${NETWORK_NAME}${VERSION}"
+# Удаляем 4-байтовый SCALE compact-length заголовок и добавляем префикс 0x
+sed -E 's/^.{8}/0x/' temp_metadata > "rust/defaults/release_metadata/${NETWORK_NAME}${VERSION}"
 
 # Удаляем временный файл
 rm temp_metadata
@@ -186,4 +187,4 @@ echo "  3. Создайте коммит с изменениями"
 echo "  4. При необходимости восстановите из backup: $BACKUP_DIR"
 
 echo
-log_success "🎉 Готово! Метаданные обновлены до версии $VERSION" 
+log_success "🎉 Готово! Метаданные обновлены до версии $VERSION"

@@ -26,7 +26,7 @@ install. Two consequences dominate the release process:
 So a release is really *three* artifacts that must agree on a runtime version: the Android build,
 the iOS build, and the metadata QR PNG.
 
-Current shipped metadata: **`trevo-asset-hub1010`** (runtime spec version 1010).
+Current shipped metadata: **`trevo-asset-hub1011`** (runtime spec version 1011).
 
 ---
 
@@ -189,7 +189,7 @@ failing: `constants`, `definitions`, `generate_message --lib`, `parser`, `printi
 
 **Skip this whole section unless the Trevo Asset Hub runtime was upgraded.** Compare the on-chain
 `spec_version` against the filename in `rust/defaults/release_metadata/` (currently
-`trevo-asset-hub1010`).
+`trevo-asset-hub1011`).
 
 This is the **only online step** — it talks to `wss://rpc.api.trevo.finance`. Everything after is
 offline.
@@ -200,7 +200,7 @@ The genesis hash is baked into `rust/defaults/src/lib.rs` and changes if the cha
 one bricks signing.
 
 ```bash
-# expected: f49c90ff41f63169e356faa7f03c749181a09566c22690d7926e82b791d34906
+# expected: 6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31
 grep -n "genesis_hash\|base58prefix\|wss://" rust/defaults/src/lib.rs
 ```
 
@@ -219,14 +219,14 @@ ls ../files/in_progress/sign_me_load_metadata_trevo-asset-hubV*
 cd ../..
 
 xxd -p rust/files/in_progress/sign_me_load_metadata_trevo-asset-hubVNNNN | tr -d '\n' > /tmp/meta.hex
-sed -E 's/^(920d1900|52531100|ea4c1900)/0x/' /tmp/meta.hex > rust/defaults/release_metadata/trevo-asset-hubNNNN
+sed -E 's/^.{8}/0x/' /tmp/meta.hex > rust/defaults/release_metadata/trevo-asset-hubNNNN
 rm /tmp/meta.hex
 
-rm -f rust/defaults/release_metadata/trevo-asset-hub1010   # keep exactly ONE metadata file
+rm -f rust/defaults/release_metadata/trevo-asset-hub1011   # keep exactly ONE metadata file
 ```
 
-> The payload carries a 4-byte header that varies (`920d1900`, `52531100`, `ea4c1900`); strip it and
-> replace with `0x`. `update_metadata.sh` handles only the `920d1900` variant — check its output.
+> The payload carries a 4-byte SCALE compact-length header; strip it and replace it with `0x`.
+> `update_metadata.sh` handles this automatically.
 > Keep **exactly one file** in `release_metadata/`; the cold DB loads every file in that directory.
 
 ### 4c. Generate the signed metadata QR
@@ -241,7 +241,7 @@ Requires `subkey` on PATH and a `trevo_assets/.env` (see `trevo_assets/env.examp
 
 ```bash
 # the runtime version is a hardcoded literal at the bottom of the script — bump it by hand
-sed -i '' 's/"1010"/"NNNN"/' trevo_assets/generate_qr.sh
+sed -i '' 's/"1011"/"NNNN"/' trevo_assets/generate_qr.sh
 cd trevo_assets && ./generate_qr.sh && cd ..
 # => trevo_assets/load_metadata_trevo-asset-hubVNNNN.png
 ```
@@ -604,10 +604,10 @@ locally with the fastlane lanes above. Wiring CI for Trevo is a worthwhile follo
 | Schemes | `PolkadotVault` (Release) · `PolkadotVault-Dev` (Debug) · `PolkadotVault-QA` (QA) |
 | iOS deployment target | 15.8.1 |
 | Chain RPC | `wss://rpc.api.trevo.finance` |
-| Genesis hash | `f49c90ff41f63169e356faa7f03c749181a09566c22690d7926e82b791d34906` |
+| Genesis hash | `6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31` |
 | Chain params | base58 prefix `5335` · decimals `12` · unit `TREVO` · Sr25519 |
 | Metadata verifier pubkey | `0x2405ad269ad0e6ca50f74226f193d7bfd1b51ef4064493c48a99f82a5a9b5374` |
-| Current metadata / QR | `rust/defaults/release_metadata/trevo-asset-hub1010` · `trevo_assets/load_metadata_trevo-asset-hubV1010.png` |
+| Current metadata / QR | `rust/defaults/release_metadata/trevo-asset-hub1011` · regenerate `trevo_assets/load_metadata_trevo-asset-hubV1011.png` with the metadata verifier |
 | Gradle / AGP / Kotlin | 8.14.3 / 8.13.1 / 1.9.22 |
 | SDK / NDK | compileSdk 36 · targetSdk 35 · minSdk 23 · NDK 28.2.13676358 |
 | Java | Zulu JDK 17 |

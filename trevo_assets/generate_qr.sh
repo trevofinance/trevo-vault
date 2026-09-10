@@ -59,4 +59,4 @@ cd ../rust/generate_message
 # generate_chain_qr "trevo-relay" $RELAY_RPC "1000"
 
 # Generate QRs for asset-hub chain
-generate_chain_qr "trevo-asset-hub" $ASSET_HUB_RPC "1010" 
+generate_chain_qr "trevo-asset-hub" $ASSET_HUB_RPC "1011"

@@ -45,7 +45,7 @@ cd ../..
 xxd -p rust/files/in_progress/sign_me_load_metadata_trevo-asset-hubV[VERSION] | tr -d '\n' > temp_metadata
 
 # Удаляем заголовок и добавляем префикс 0x
-sed 's/^920d1900/0x/' temp_metadata > rust/defaults/release_metadata/trevo-asset-hub[VERSION]
+sed -E 's/^.{8}/0x/' temp_metadata > rust/defaults/release_metadata/trevo-asset-hub[VERSION]
 
 # Удаляем временный файл
 rm temp_metadata
@@ -129,10 +129,10 @@ cd trevo_assets
 ### Genesis hash изменился
 Если изменился genesis hash сети (например, после обновления runtime):
 - Обновите значение в `rust/defaults/src/lib.rs` строка 193
-- Текущий genesis hash: `977630d34363c8b118147fe7deb58118fa1f75197d036071572e9a3698bee56d`
+- Текущий genesis hash: `6d32fee54448c79868e083fc2179f662edc8a348c8b3c92407056f2ef286ea31`
 - Пересоздайте холодную базу данных: `cargo run make-cold-release`
 
 ### RPC недоступен
 - Проверьте подключение к интернету
 - Убедитесь, что RPC узел работает
-- Попробуйте другой RPC endpoint 
+- Попробуйте другой RPC endpoint
