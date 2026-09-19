@@ -54,7 +54,10 @@ android {
 
 	buildTypes {
 		release {
-			minifyEnabled false
+			// Google Play measures release DEX shrinking, optimization and obfuscation.
+			// Keep these enabled together so R8 emits the r8.json metrics Play consumes.
+			minifyEnabled true
+			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 			signingConfig signingConfigs.release
 		}

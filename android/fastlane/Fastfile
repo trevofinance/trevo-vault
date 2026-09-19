@@ -55,7 +55,7 @@ platform :android do
   # ────────────────────────────────────────────────────────────
   # VERIFY
   # ────────────────────────────────────────────────────────────
-  desc "Verify the built AAB: signature, ABI coverage, 16 KB alignment, native lib, embedded database"
+  desc "Verify the built AAB: signature, ABIs, 16 KB alignment, DEX optimization, native lib, database"
   desc "Usage: fastlane verify_aab"
   lane :verify_aab do
     UI.user_error!("No AAB at #{AAB_PATH}. Run `fastlane build_release` first.") unless File.exist?(AAB_PATH)
@@ -99,12 +99,17 @@ platform :android do
     alignment_check = File.join(ANDROID_DIR, "scripts/check_16kb_alignment.sh")
     sh(alignment_check, AAB_PATH)
 
-    # 5. Cold database actually made it into the bundle.
+    # 5. Read the same r8.json metadata used by Android vitals and reject bundles
+    #    below Google Play's 25% threshold for any DEX optimization category.
+    dex_check = File.join(ANDROID_DIR, "scripts/check_dex_optimization.rb")
+    sh(dex_check, AAB_PATH)
+
+    # 6. Cold database actually made it into the bundle.
     unless listing.include?("base/assets/Database/db")
       UI.user_error!("Cold database not embedded in the AAB. Run `fastlane prepare_database` and rebuild.")
     end
 
-    UI.success "AAB verified: signed with the upload key, ABIs #{abis.join(', ')}, native libraries are 16 KB-aligned, libsigner.so present in all, database embedded"
+    UI.success "AAB verified: upload key, ABIs #{abis.join(', ')}, 16 KB native alignment, DEX optimization, libsigner.so, database"
     UI.success "#{AAB_PATH} (#{(File.size(AAB_PATH) / 1024.0 / 1024).round(1)} MB)"
   end
 

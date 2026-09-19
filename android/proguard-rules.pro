@@ -5,6 +5,13 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
+# UniFFI calls the Rust core through JNA proxies and reflected Structure fields.
+# JNA's Android documentation requires these rules when R8/ProGuard is enabled.
+-dontwarn java.awt.**
+-keep class com.sun.jna.* { *; }
+-keep class * extends com.sun.jna.* { *; }
+-keepclassmembers class * extends com.sun.jna.* { public *; }
+
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:

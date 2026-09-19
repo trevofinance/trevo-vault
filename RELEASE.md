@@ -325,7 +325,7 @@ bundle exec fastlane release_internal validate_only:true  # full dry run — pub
 bundle exec fastlane release_internal clean:true          # force a clean build
 bundle exec fastlane build_release                        # build + verify, no upload
 bundle exec fastlane upload_internal                      # upload an already-built AAB
-bundle exec fastlane verify_aab                           # the four safety checks
+bundle exec fastlane verify_aab                           # all local Play-safety checks
 bundle exec fastlane play_status                          # check Play credentials
 ```
 
@@ -353,7 +353,8 @@ Trevo Vault ships **App Bundles, not APKs**.
 # => android/build/outputs/bundle/release/android-release.aab
 ```
 
-A clean build is ~4 min (the Rust core cross-compiles for three targets first); incremental ~15s.
+A clean build is ~4 min (the Rust core cross-compiles for three targets and R8 optimizes the DEX);
+incremental builds are usually 1–2 min.
 Signing is automatic via the `signingConfigs.release` block in `android/build.gradle`, which reads
 the `MYAPP_UPLOAD_*` properties and **fails loudly** if they are missing rather than emitting an
 unsigned or debug-signed bundle.
@@ -365,8 +366,10 @@ unsigned or debug-signed bundle.
 ### 6c. Verify the AAB
 
 `verify_aab` hard-fails on: an unsigned bundle, a bundle signed with the **wrong key**, an ABI set
-that disagrees with the cargo targets, any ABI missing `libsigner.so`, or a missing cold database. It
-runs automatically before every upload. To check by hand:
+that disagrees with the cargo targets, any ABI missing `libsigner.so`, a 64-bit native library that
+is not 16 KB-aligned, missing/disabled R8 optimization, a DEX obfuscation/optimization/shrinking
+score below Google Play's 25% threshold, or a missing cold database. It runs automatically before
+every upload. To check by hand:
 
 ```bash
 AAB=android/build/outputs/bundle/release/android-release.aab
@@ -376,6 +379,8 @@ keytool -printcert -jarfile "$AAB" | grep SHA256                 # must equal th
 unzip -l "$AAB" | grep 'base/lib/.*libsigner.so'                 # all THREE ABIs
 unzip -l "$AAB" | grep 'base/lib/' | awk '{print $NF}' | cut -d/ -f3 | sort -u   # arm64-v8a, armeabi-v7a, x86_64
 unzip -l "$AAB" | grep 'base/assets/Database/db'                 # ~524287 bytes
+android/scripts/check_16kb_alignment.sh "$AAB"
+android/scripts/check_dex_optimization.rb "$AAB"                # all three scores >= 25%
 ```
 
 > `jarsigner -verify` only proves a bundle is self-consistently signed — a wrong or debug key passes
@@ -581,6 +586,7 @@ locally with the fastlane lanes above. Wiring CI for Trevo is a worthwhile follo
 | `signingReport`: `Variant: debug → Missing keystore` | Harmless; the debug keystore is auto-created on the first debug build. |
 | `apksigner` fails on the `.aab` | `apksigner` is APK-only. AABs are signed by Gradle; to sign by hand use `jarsigner`. |
 | App crashes on launch on some ABI (`UnsatisfiedLinkError`) | An ABI in `abiFilters` is missing from `cargo { targets }`, so `libsigner.so` was not built for it. Keep the two in sync (§6c). |
+| Play: `DEX code optimization is below our threshold` | Release R8 was disabled or constrained by broad keep rules. `verify_aab` now reads Play's `r8.json` metrics and rejects any category below 25%; do not bypass it. |
 | Play: `Version code N has already been used` | Bump `versionCode` (§5). Play never accepts a repeated code. |
 | `supply` changed the store listing | The `skip_upload_*` flags were removed from `upload_internal`. Restore them — this repo does not manage listing copy via fastlane. |
 | fastlane: `Could not find gradlew` | Run Android lanes from `android/`, not from `android/fastlane/`. |
