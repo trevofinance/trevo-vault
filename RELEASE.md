@@ -628,7 +628,7 @@ locally with the fastlane lanes above. Wiring CI for Trevo is a worthwhile follo
 | Metadata verifier pubkey | `0x7e177b85cefefb6e46b1fc007726ee428fe443906e94f77e4a3ae622dc135642` |
 | Current metadata / QR | `rust/defaults/release_metadata/trevo-asset-hub1011` · `trevo_assets/load_metadata_trevo-asset-hubV1011.png` |
 | Gradle / AGP / Kotlin | 8.14.3 / 8.13.1 / 1.9.22 |
-| SDK / NDK | compileSdk 36 · targetSdk 35 · minSdk 23 · NDK 28.2.13676358 |
+| SDK / NDK | compileSdk 36 · targetSdk 36 · minSdk 23 · NDK 28.2.13676358 |
 | Java | Zulu JDK 17 |
 | Rust / UniFFI | rustc 1.97.1 (unpinned) / uniffi-bindgen 0.22.0 |
 | fastlane | 2.229.1 via `bundle exec` |
