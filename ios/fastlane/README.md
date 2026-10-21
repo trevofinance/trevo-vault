@@ -31,7 +31,7 @@ Usage: fastlane asc_status
 [bundle exec] fastlane ios provisioning_profiles
 ```
 
-Fetch and install the existing App Store provisioning profile
+Fetch or create an App Store provisioning profile for an installed signing identity
 
 Usage: fastlane provisioning_profiles
 

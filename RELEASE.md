@@ -466,15 +466,20 @@ bundle exec fastlane asc_status
 
 ### 7b. Signing
 
-`build_testflight` calls `provisioning_profiles` first, which fetches and installs
-`TrevoVault_AppStore` through the API key — no manual `.mobileprovision` handling. It then pins
-manual signing (profile, identity `Apple Distribution`, bundle ID `finance.trevo.vault`) on the
-Release configuration.
+`build_testflight` calls `provisioning_profiles` first, which fetches and installs a valid App Store
+profile through the API key — no manual `.mobileprovision` handling. If no usable profile exists,
+it creates one using an installed distribution identity. It reuses valid profiles on subsequent
+runs and does not revoke certificates or delete old profiles. If `TrevoVault_AppStore` is already
+taken, Fastlane adds a suffix; both archive signing and IPA export use the actual downloaded
+profile name. The downloaded profile is saved to `ios/sign/TrevoVault_AppStore.mobileprovision`.
 
-> ⚠️ The profile in `ios/sign/` **expires 2026-08-14**. `provisioning_profiles` renews it when it
-> can; if signing fails, check the expiry first. (The profiles installed system-wide are for
-> `finance.trevo.wallet` — harmless; the lane installs the Vault's own.)
->
+The lane pins manual signing (profile, identity `Apple Distribution`, bundle ID
+`finance.trevo.vault`) on the Release configuration. A valid distribution certificate **and its
+private key** must be installed in the Keychain (see §2). After certificate rotation, the lane
+creates a profile for the replacement identity if needed. Setting `sigh` to `readonly: true`
+prevents this recovery and causes `No matching provisioning profile found` when the old profile
+expires or no longer matches an installed identity.
+
 > `build_testflight` writes signing settings into `project.pbxproj`. That is intentional — it keeps
 > archives reproducible — but leaves `git status` dirty. Review and commit that diff once; it then
 > stays stable.
@@ -618,7 +623,7 @@ locally with the fastlane lanes above. Wiring CI for Trevo is a worthwhile follo
 | Apple Team | `9NMWDV6M74` — TRAIT TECH PTE LTD |
 | App Store Connect | app ID `6759246669` · portal App ID `Y6TFBP5MRW` · SKU `trevo-vault-ios` |
 | ASC API key | `AuthKey_X2TZ9NDANA.p8` — key `X2TZ9NDANA`, issuer `9ece21cf-d6e0-413a-89fb-84f5b3acaa0b` |
-| iOS profile | `ios/sign/TrevoVault_AppStore.mobileprovision` — **expires 2026-08-14** |
+| iOS profile | `ios/sign/TrevoVault_AppStore.mobileprovision` — fetched or replaced by `provisioning_profiles`; archive/export use its actual name |
 | Xcode project | `ios/PolkadotVault.xcodeproj` (no workspace; SPM, no CocoaPods) |
 | Schemes | `PolkadotVault` (Release) · `PolkadotVault-Dev` (Debug) · `PolkadotVault-QA` (QA) |
 | iOS deployment target | 15.8.1 |
