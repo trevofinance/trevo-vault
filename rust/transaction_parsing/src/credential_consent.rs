@@ -37,7 +37,7 @@ pub(crate) fn signing_request(
     let expires = issued
         .checked_add(CONSENT_LIFETIME_MS)
         .ok_or(Error::InvalidMessagePayload)?;
-    if issued == 0 || service == 0 {
+    if issued == 0 {
         return Err(Error::InvalidMessagePayload);
     }
     let id = hex::encode(&message[1..17]);
@@ -113,8 +113,16 @@ mod tests {
         for length in [0, 32, 94, 96] {
             assert!(signing_request(&vec![0; length], &[0x22; 32], &[0x11; 32]).is_err());
         }
-        let mut input = message();
-        input[91..95].fill(0);
-        assert!(signing_request(&input, &[0x22; 32], &[0x11; 32]).is_err());
+    }
+
+    #[test]
+    fn preserves_zero_and_maximum_u32_service_identifiers() {
+        for service in [0u32, u32::MAX] {
+            let mut input = message();
+            input[91..95].copy_from_slice(&service.to_le_bytes());
+            let (digest, display) = signing_request(&input, &[0x22; 32], &[0x11; 32]).unwrap();
+            assert_eq!(digest, sp_core::blake2_256(&input));
+            assert!(display.contains(&format!("Attestation service: {service}\n")));
+        }
     }
 }

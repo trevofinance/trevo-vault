@@ -8,8 +8,8 @@ message commands keep their formats and signing rules.
 The message contains version1, RFC4122 UUIDv4, issuance milliseconds as little
 endian u64, scope21, genesis32, payload version1, regular-account32 and
 attestation-service ID as little endian u32. The parser requires the account and
-genesis to match the frame, a positive service and issuance time, and a
-nonoverflowing seven-day expiry. Other algorithms, scopes, versions, lengths,
+genesis to match the frame, the full u32 service range including zero, a positive
+issuance time, and a nonoverflowing seven-day expiry. Other algorithms, scopes, versions, lengths,
 UUID variants and digest-only inputs fail before a signing action is stored.
 
 Vault displays purpose, account, network, service, UUID, issue/expiry timestamps
