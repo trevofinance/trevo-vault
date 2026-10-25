@@ -16,6 +16,9 @@ use crate::cards::{make_author_info, make_author_info_with_key, Card, Warning};
 use crate::error::{Error, Result};
 use crate::helpers::{multisigner_msg_encryption, multisigner_msg_genesis_encryption};
 use crate::TransactionAction;
+use definitions::crypto::Encryption;
+use sp_core::H256;
+use sp_runtime::MultiSigner;
 
 const BYTES_START: &[u8; 7] = b"<Bytes>";
 const BYTES_END: &[u8; 8] = b"</Bytes>";
@@ -57,9 +60,42 @@ pub fn process_concrete_chain_message(
     let (author_multi_signer, message_vec, genesis_hash, encryption) =
         multisigner_msg_genesis_encryption(database, data_hex)?;
 
-    let network_specs_key = NetworkSpecsKey::from_parts(&genesis_hash, &encryption);
-
     let display_msg = decode_display_message_ensuring_tags(&message_vec)?;
+    process_concrete_request(
+        database,
+        author_multi_signer,
+        message_vec,
+        genesis_hash,
+        encryption,
+        display_msg,
+    )
+}
+
+/// Command09 displays the typed consent and signs its digest through the ordinary key owner.
+pub fn process_credential_consent(
+    database: &sled::Db,
+    data_hex: &str,
+) -> Result<TransactionAction> {
+    let (author, message, genesis, encryption) =
+        multisigner_msg_genesis_encryption(database, data_hex)?;
+    let public = match &author {
+        MultiSigner::Sr25519(public) => public.as_ref(),
+        _ => return Err(Error::InvalidMessagePayload),
+    };
+    let (digest, display) =
+        crate::credential_consent::signing_request(&message, public, genesis.as_bytes())?;
+    process_concrete_request(database, author, digest, genesis, encryption, display)
+}
+
+fn process_concrete_request(
+    database: &sled::Db,
+    author_multi_signer: MultiSigner,
+    message_vec: Vec<u8>,
+    genesis_hash: H256,
+    encryption: Encryption,
+    display_msg: String,
+) -> Result<TransactionAction> {
+    let network_specs_key = NetworkSpecsKey::from_parts(&genesis_hash, &encryption);
 
     // initialize index and indent
     let mut index: u32 = 0;

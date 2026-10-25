@@ -138,6 +138,106 @@ mod tests {
     use transaction_parsing::produce_output;
 
     #[test]
+    fn signs_typed_credential_consent_digest_through_real_parser_and_key_owner() {
+        let directory = tempdir().unwrap();
+        let db = sled::open(&directory).unwrap();
+        db_handling::cold_default::populate_cold_no_metadata(&db, Verifier { v: None }).unwrap();
+        let network = db_handling::helpers::get_all_networks(&db)
+            .unwrap()
+            .remove(0)
+            .specs;
+        let network_key = definitions::keyring::NetworkSpecsKey::from_parts(
+            &network.genesis_hash,
+            &Encryption::Sr25519,
+        );
+        db_handling::identities::try_create_seed(&db, "Alice", ALICE_SEED_PHRASE, false).unwrap();
+        db_handling::identities::try_create_address(
+            &db,
+            "Alice",
+            ALICE_SEED_PHRASE,
+            "//Alice",
+            &network_key,
+        )
+        .unwrap();
+        let account =
+            hex::decode("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d")
+                .unwrap();
+        let genesis = network.genesis_hash.as_bytes().to_vec();
+        let mut message = vec![1];
+        message.extend_from_slice(&hex::decode("123456781234423482341234567890ab").unwrap());
+        message.extend_from_slice(&1_800_000_000_000u64.to_le_bytes());
+        message.push(21);
+        message.extend_from_slice(&genesis);
+        message.push(1);
+        message.extend_from_slice(&account);
+        message.extend_from_slice(&7u32.to_le_bytes());
+        let frame = [vec![0x53, 1, 9], account.clone(), message.clone(), genesis].concat();
+        let output = produce_output(&db, &hex::encode(&frame)).unwrap();
+        if let TransactionAction::Sign { actions, checksum } = output {
+            assert_eq!(actions.len(), 1);
+            let displayed = format!("{:?}", actions[0].content);
+            assert!(displayed.contains("issue one credential"));
+            assert!(displayed.contains("Attestation service: 7"));
+            assert!(displayed.contains("12345678-1234-4234-8234-1234567890ab"));
+            let signed = create_signature(
+                &db,
+                ALICE_SEED_PHRASE,
+                "",
+                "",
+                checksum,
+                0,
+                Encryption::Sr25519,
+            )
+            .unwrap();
+            let public = AccountId32::new(account.try_into().unwrap());
+            let digest = sp_core::blake2_256(&message);
+            assert!(signed.signature.verify(digest.as_slice(), &public));
+            assert!(!signed.signature.verify(message.as_slice(), &public));
+            let tagged = [
+                b"<Bytes>".as_slice(),
+                digest.as_slice(),
+                b"</Bytes>".as_slice(),
+            ]
+            .concat();
+            assert!(!signed.signature.verify(tagged.as_slice(), &public));
+        } else {
+            panic!("Typed consent was not signable: {output:?}");
+        }
+        let mut generic = frame;
+        generic[2] = 3;
+        assert!(produce_output(&db, &hex::encode(&generic)).is_err());
+        let tagged = b"<Bytes>existing command03 remains exact</Bytes>";
+        let legacy = [
+            vec![0x53, 1, 3],
+            generic[3..35].to_vec(),
+            tagged.to_vec(),
+            generic[130..].to_vec(),
+        ]
+        .concat();
+        if let TransactionAction::Sign { checksum, .. } =
+            produce_output(&db, &hex::encode(legacy)).unwrap()
+        {
+            let signed = create_signature(
+                &db,
+                ALICE_SEED_PHRASE,
+                "",
+                "",
+                checksum,
+                0,
+                Encryption::Sr25519,
+            )
+            .unwrap();
+            let public = AccountId32::new(generic[3..35].try_into().unwrap());
+            assert!(signed.signature.verify(tagged.as_slice(), &public));
+        } else {
+            panic!("Existing tagged message no longer signs");
+        }
+        generic[2] = 9;
+        generic[1] = 0;
+        assert!(produce_output(&db, &hex::encode(generic)).is_err());
+    }
+
+    #[test]
     fn sign_long_msg() {
         let tmp_dir = tempdir().unwrap();
         let db = sled::open(&tmp_dir).unwrap();
